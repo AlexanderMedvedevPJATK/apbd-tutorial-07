@@ -1,5 +1,6 @@
-using Tutorial7.Repositories;
 using Tutorial7.Repositories.Order;
+using Tutorial7.Repositories.Product;
+using Tutorial7.Repositories.Warehouse;
 
 var builder = WebApplication.CreateBuilder(args);
 

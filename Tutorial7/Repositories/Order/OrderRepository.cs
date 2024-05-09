@@ -44,7 +44,7 @@ public class OrderRepository : IOrderRepository
     {
         await using var connection = new SqlConnection(_configuration.GetConnectionString("Docker"));
         await connection.OpenAsync();
-
+        
         await using var command = new SqlCommand(
             "UPDATE [Order] SET FulfilledAt = @date WHERE IdOrder = @id",
             connection);

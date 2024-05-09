@@ -1,6 +1,7 @@
+using System.Globalization;
 using Microsoft.Data.SqlClient;
 
-namespace Tutorial7.Repositories;
+namespace Tutorial7.Repositories.Product;
 
 public class ProductRepository : IProductRepository
 {
@@ -24,7 +25,7 @@ public class ProductRepository : IProductRepository
         return result is not null;
     }
     
-    public async Task<int?> GetProductPriceAsync(int idProduct)
+    public async Task<float?> GetProductPriceAsync(int idProduct)
     {
         await using var connection = new SqlConnection(_configuration.GetConnectionString("Docker"));
         await connection.OpenAsync();
@@ -33,7 +34,13 @@ public class ProductRepository : IProductRepository
         command.Parameters.AddWithValue("@id", idProduct);
 
         var result = await command.ExecuteScalarAsync();
+        if (result is null) return null;
+        
+        var resultString = result.ToString();
+        resultString = resultString.Replace(",", ".");
+        
+        var resultValue = float.Parse(resultString, CultureInfo.InvariantCulture);
 
-        return result as int?;
+        return resultValue;
     }
 }

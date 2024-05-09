@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Tutorial7.DTOs;
 
-namespace Tutorial7.Repositories;
+namespace Tutorial7.Repositories.Warehouse;
 
 public class WarehouseRepository : IWarehouseRepository
 {
@@ -37,21 +37,21 @@ public class WarehouseRepository : IWarehouseRepository
         command.Parameters.AddWithValue("@id", idOrder);
         
         var result = await command.ExecuteScalarAsync();
-
-        return result is not null;
+        
+        return result as int? > 0;
     }
     
     public async Task<int?> AddProductToWarehouseAsync(AddProductToWarehouseDto addProductToWarehouseDto, 
                                                        int idOrder, 
-                                                       int productPrice)
+                                                       float productPrice)
     {
         await using var connection = new SqlConnection(_configuration.GetConnectionString("Docker"));
         await connection.OpenAsync();
 
         await using var command =
             new SqlCommand(
-                @"INSERT INTO Warehouse_Product (IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)
-                          OUTPUT INSERTED.IdProduct_Warehouse
+                @"INSERT INTO Product_Warehouse (IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)
+                          OUTPUT INSERTED.IdProductWarehouse
                           VALUES (@idWarehouse, @idProduct, @idOrder, @amount, @price, @createdAt)",
                 connection);
         command.Parameters.AddWithValue("@idWarehouse", addProductToWarehouseDto.IdWarehouse);
@@ -61,7 +61,6 @@ public class WarehouseRepository : IWarehouseRepository
         command.Parameters.AddWithValue("@price", productPrice);
         command.Parameters.AddWithValue("@createdAt", DateTime.Now);
         
-
         var result = await command.ExecuteScalarAsync();
 
         return result as int?;

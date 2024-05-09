@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tutorial7.DTOs;
-using Tutorial7.Repositories;
 using Tutorial7.Repositories.Order;
+using Tutorial7.Repositories.Product;
+using Tutorial7.Repositories.Warehouse;
 
 namespace Tutorial7.Controllers
 {
@@ -26,15 +26,13 @@ namespace Tutorial7.Controllers
         [HttpPost]
         public IActionResult AddProductToWarehouse(int idProduct, int idWarehouse, int amount)
         {
-            Console.WriteLine("Entered AddProductToWarehouse method");
             var dto = new AddProductToWarehouseDto
             {
                 IdProduct = idProduct,
                 IdWarehouse = idWarehouse,
                 Amount = amount
             };
-
-            Console.WriteLine("Validating");
+            
             var validationResult = ValidateProductAndWarehouse(dto);
             if (validationResult != null)
             {
@@ -42,19 +40,18 @@ namespace Tutorial7.Controllers
             }
             
             var idOrder = _orderRepository.CheckIfOrderForProductExistsAsync(idProduct, amount).Result;
-            Console.WriteLine($"Order ID: {idOrder}");
             if (idOrder == null)
             {
                 return BadRequest("Order does not exist");
             }
             
-            var orderValidation = ValidateOrder(dto, (int) idOrder);
+            var orderValidation = ValidateOrder((int) idOrder);
             if (orderValidation != null)
             {
                 return orderValidation;
             }
 
-            if (_orderRepository.FulfillOrderAsync((int) idOrder).Result)
+            if (!_orderRepository.FulfillOrderAsync((int) idOrder).Result)
             {
                 return BadRequest("Unable to fulfill order");
             }
@@ -65,7 +62,9 @@ namespace Tutorial7.Controllers
                 return BadRequest("Product price not found");
             }
             
-            var id = _warehouseRepository.AddProductToWarehouseAsync(dto, (int) idOrder, (int) productPrice);
+            var id = _warehouseRepository.AddProductToWarehouseAsync(dto,
+                                                                        (int) idOrder,
+                                                                        (float) productPrice).Result;
 
             Console.WriteLine($"Added product to warehouse with ID: {id}");
 
@@ -124,14 +123,14 @@ namespace Tutorial7.Controllers
             return null;
         }
         
-        private IActionResult? ValidateOrder(AddProductToWarehouseDto dto, int idOrder)
+        private IActionResult? ValidateOrder(int idOrder)
         {
             if (!_orderRepository.CheckIfOrderCreatedAtIsBeforeRequestCreatedAtAsync(idOrder, DateTime.Now).Result)
             {
                 return BadRequest("Order was created after request");
             }
             
-            if(!_warehouseRepository.CheckIfOrderWasAlreadyFulfilledAsync(idOrder).Result)
+            if(_warehouseRepository.CheckIfOrderWasAlreadyFulfilledAsync(idOrder).Result)
             {
                 return BadRequest("Order was already fulfilled");
             }

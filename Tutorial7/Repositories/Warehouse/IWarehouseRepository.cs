@@ -1,12 +1,13 @@
 using Tutorial7.DTOs;
 
-namespace Tutorial7.Repositories;
+namespace Tutorial7.Repositories.Warehouse;
 
 public interface IWarehouseRepository
 {
     Task<bool> CheckWarehouseExistenceAsync(int idWarehouse);
-    Task<int?> AddProductToWarehouseAsync(AddProductToWarehouseDto addProductToWarehouseDto,
-                                          int idOrder,
-                                          int productPrice);
     Task<bool> CheckIfOrderWasAlreadyFulfilledAsync(int idOrder);
+
+    Task<int?> AddProductToWarehouseAsync(AddProductToWarehouseDto addProductToWarehouseDto,
+        int idOrder,
+        float productPrice);
 }
